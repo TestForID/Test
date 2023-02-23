@@ -1,0 +1,57 @@
+Step 1.
+Run the two commands in the log folder of primary monitoring server to generate csv file
+
+[accessadm@rhlpiamms610 logs]$ pwd
+/apps/iammonitor/apache-tomcat-8.5.46/logs
+
+sudo grep Loggi catalina.2*| cut -d " " -f 10|sed 's/\//\,/g' > newservers.csv
+sed -i '1iplatform,ip,name' newservers.csv
+
+Open newservers.csv, you should see something like this:
+
+==========================================
+platform,ip,name
+AIX,10.118.42.47,stgaixaesl256l46.rccl.com
+AIX,10.14.81.45,10.14.81.45
+...
+==========================================
+
+
+Copy newservers.csv to /apps/pamonboard/script
+
+
+
+Step 2.
+Change RegisterNewServer.registerTemp(...) to RegisterNewServer.register(...) in com.rccl.pam.monitoring.web.Admin.java (3 of them)
+Rebuild war and deploy to PROD.
+
+
+
+
+
+
+Step 3.
+Run the script to in /apps/pamonboard/script folder to register the servers:
+ ./psrun.sh batch_reg_new_server /apps/pamonboard/script/newservers.csv
+
+The following section is added in psrun.sh already
+
+==========================================
+elif [ $1 == 'batch_reg_new_server' ]
+then
+  $JAVA_HOME/bin/java -cp $CLASSPATH -Djava.util.logging.config.file=/apps/pamonboard/script/logging.properties -DCFG_FILE=/apps/pamonboard/script/app.cfg com.rccl.pam.onboarding.TaskBatchNewServerRegistration $2
+==========================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
